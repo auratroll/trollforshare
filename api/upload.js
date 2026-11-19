@@ -4,7 +4,11 @@
 const { BLOB_TOKEN, MAX_BIG_FILE, send, body } = require('./_lib');
 
 module.exports = async (req, res) => {
-  if (req.method === 'GET') return send(res, 200, { enabled: !!BLOB_TOKEN, max: MAX_BIG_FILE });
+  if (req.method === 'GET') {
+    // Shows only the NAMES of Blob settings (never their secret values) to help setup.
+    const blobVars = Object.keys(process.env).filter(k => k.includes('BLOB'));
+    return send(res, 200, { enabled: !!BLOB_TOKEN, max: MAX_BIG_FILE, blobVars });
+  }
   if (!BLOB_TOKEN) return send(res, 501, { error: 'Big files are not enabled. Connect Vercel Blob in Storage.' });
   try {
     const { handleUpload } = await import('@vercel/blob/client');
