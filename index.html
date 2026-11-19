@@ -1,0 +1,363 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>TrollForShare – Share text & images on the same WiFi</title>
+<meta name="description" content="TrollForShare: instantly share text, images and files between devices on the same WiFi. No login, no app.">
+<meta name="theme-color" content="#4f46e5">
+<link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>😈</text></svg>">
+<style>
+  :root{--bg:#f4f5fb;--card:#fff;--ink:#16172b;--muted:#6b6f88;--line:#e4e6f0;--brand:#4f46e5;--brand2:#7c3aed;--ok:#16a34a;--bad:#dc2626;--r:16px}
+  @media (prefers-color-scheme:dark){:root{--bg:#0e0f1a;--card:#171a2b;--ink:#eceefb;--muted:#9a9fbd;--line:#272b44}}
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;background:var(--bg);color:var(--ink);min-height:100vh}
+  header{background:linear-gradient(135deg,var(--brand),var(--brand2));color:#fff;padding:22px 16px 70px}
+  .wrap{max-width:820px;margin:0 auto}
+  .top{display:flex;align-items:center;justify-content:space-between;gap:12px;flex-wrap:wrap}
+  .logo{font-size:26px;font-weight:800;letter-spacing:-.5px;display:flex;align-items:center;gap:8px}
+  .tag{opacity:.85;font-size:14px;margin-top:6px}
+  .pill{display:inline-flex;align-items:center;gap:8px;background:rgba(255,255,255,.16);border:1px solid rgba(255,255,255,.25);padding:7px 12px;border-radius:999px;font-size:13px;cursor:pointer;color:#fff}
+  .dot{width:9px;height:9px;border-radius:50%;background:#facc15}
+  .dot.on{background:#4ade80;box-shadow:0 0 0 4px rgba(74,222,128,.25)}
+  .dot.off{background:#f87171}
+  main{margin-top:-50px;padding:0 16px 60px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:var(--r);box-shadow:0 8px 30px rgba(20,20,60,.08)}
+  .composer{padding:14px}
+  .tabs{display:flex;gap:6px;margin-bottom:12px}
+  .tab{flex:1;border:1px solid var(--line);background:transparent;color:var(--ink);padding:10px;border-radius:12px;font-weight:600;cursor:pointer;font-size:15px}
+  .tab.active{background:var(--brand);border-color:var(--brand);color:#fff}
+  textarea{width:100%;min-height:120px;resize:vertical;border:1px solid var(--line);border-radius:12px;padding:12px;font:inherit;font-size:16px;background:transparent;color:var(--ink);outline:none}
+  textarea:focus{border-color:var(--brand)}
+  .row{display:flex;gap:8px;align-items:center;justify-content:space-between;margin-top:10px;flex-wrap:wrap}
+  .btn{border:0;background:var(--brand);color:#fff;padding:11px 18px;border-radius:12px;font-weight:700;font-size:15px;cursor:pointer}
+  .btn:disabled{opacity:.5;cursor:default}
+  .btn.ghost{background:transparent;color:var(--muted);border:1px solid var(--line);font-weight:600}
+  .btn.small{padding:7px 12px;font-size:13px;border-radius:10px}
+  .hint{font-size:12.5px;color:var(--muted)}
+  .drop{border:2px dashed var(--line);border-radius:14px;padding:30px 14px;text-align:center;cursor:pointer;transition:.15s}
+  .drop.over{border-color:var(--brand);background:rgba(79,70,229,.06)}
+  .drop b{display:block;font-size:17px;margin:8px 0 4px}
+  .progress{height:6px;background:var(--line);border-radius:9px;overflow:hidden;margin-top:12px;display:none}
+  .progress i{display:block;height:100%;width:0;background:linear-gradient(90deg,var(--brand),var(--brand2));transition:width .2s}
+  .listhead{display:flex;justify-content:space-between;align-items:center;margin:22px 4px 10px}
+  .listhead h2{font-size:16px;margin:0}
+  .items{display:grid;gap:10px}
+  .item{padding:12px 14px}
+  .meta{display:flex;justify-content:space-between;gap:8px;font-size:12.5px;color:var(--muted);margin-bottom:8px}
+  .me{color:var(--brand);font-weight:700}
+  .txt{white-space:pre-wrap;word-break:break-word;font-size:15.5px;line-height:1.45;max-height:260px;overflow:auto}
+  .txt a{color:var(--brand)}
+  .img{display:block;max-width:100%;max-height:340px;border-radius:12px;background:var(--line);cursor:zoom-in}
+  .file{display:flex;align-items:center;gap:12px}
+  .ficon{width:44px;height:44px;border-radius:12px;background:rgba(79,70,229,.12);display:grid;place-items:center;font-size:22px;flex:none}
+  .fname{font-weight:600;word-break:break-all}
+  .acts{display:flex;gap:6px;margin-top:10px;flex-wrap:wrap}
+  .empty{text-align:center;color:var(--muted);padding:34px 16px}
+  .empty .big{font-size:40px}
+  .banner{background:#fef3c7;color:#78350f;border:1px solid #fcd34d;border-radius:12px;padding:10px 12px;font-size:13.5px;margin-bottom:12px;display:none}
+  .panel{display:none;margin-top:12px;padding:14px}
+  .panel input{border:1px solid var(--line);border-radius:10px;padding:10px 12px;font-size:16px;width:150px;text-transform:uppercase;background:transparent;color:var(--ink);letter-spacing:2px}
+  .toast{position:fixed;left:50%;bottom:22px;transform:translateX(-50%) translateY(30px);background:#16172b;color:#fff;padding:11px 16px;border-radius:12px;font-size:14px;opacity:0;transition:.25s;pointer-events:none;z-index:9;max-width:90vw}
+  .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  .viewer{position:fixed;inset:0;background:rgba(0,0,0,.88);display:none;align-items:center;justify-content:center;z-index:8;padding:16px}
+  .viewer img{max-width:100%;max-height:100%;border-radius:8px}
+  footer{text-align:center;color:var(--muted);font-size:12.5px;padding:10px 16px 30px}
+  .hidden{display:none!important}
+</style>
+</head>
+<body>
+<header>
+  <div class="wrap">
+    <div class="top">
+      <div>
+        <div class="logo">😈 TrollForShare</div>
+        <div class="tag">Share text & images instantly with devices on the same WiFi</div>
+      </div>
+      <button class="pill" id="roomPill" title="Network / private code">
+        <span class="dot" id="dot"></span><span id="roomLabel">Connecting…</span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <div class="banner" id="banner"></div>
+
+  <div class="card composer">
+    <div class="tabs">
+      <button class="tab active" data-tab="text">✏️ Text</button>
+      <button class="tab" data-tab="files">🖼️ Images / Files</button>
+    </div>
+
+    <div id="tab-text">
+      <textarea id="text" placeholder="Type or paste text here… (Ctrl + Enter to send)"></textarea>
+      <div class="row">
+        <span class="hint">Open this site on another device on the same WiFi — it appears there instantly.</span>
+        <button class="btn" id="sendText">Send ➤</button>
+      </div>
+    </div>
+
+    <div id="tab-files" class="hidden">
+      <label class="drop" id="drop">
+        <div style="font-size:34px">📤</div>
+        <b>Tap to choose, or drop images here</b>
+        <span class="hint">You can also paste a screenshot (Ctrl + V). Max 3 MB per file; large photos are compressed automatically.</span>
+        <input type="file" id="fileInput" multiple hidden>
+      </label>
+      <div class="progress" id="progress"><i></i></div>
+    </div>
+  </div>
+
+  <div class="card panel" id="panel">
+    <b>🔒 Private code</b>
+    <p class="hint" style="margin:6px 0 10px">Use the same code on both devices to share privately — even on different networks or mobile data. Leave it empty to use your WiFi automatically.</p>
+    <div class="row" style="justify-content:flex-start;margin-top:0">
+      <input id="codeInput" maxlength="20" placeholder="CODE">
+      <button class="btn small" id="codeJoin">Join</button>
+      <button class="btn small ghost" id="codeNew">Random</button>
+      <button class="btn small ghost" id="codeLeave">Use WiFi</button>
+    </div>
+  </div>
+
+  <div class="listhead">
+    <h2>Shared items</h2>
+    <button class="btn small ghost" id="clearAll">🗑 Clear all</button>
+  </div>
+  <div class="items" id="items"></div>
+</main>
+
+<footer>TrollForShare by Mr.Troll · Items disappear automatically after 24 hours · Don't share passwords or private documents on public WiFi.</footer>
+
+<div class="viewer" id="viewer"><img alt=""></div>
+<div class="toast" id="toast"></div>
+
+<script>
+(() => {
+  const $ = s => document.querySelector(s);
+  const MAX_BYTES = 3 * 1024 * 1024;
+  const store = {
+    get(k){ try { return localStorage.getItem(k) || ''; } catch { return ''; } },
+    set(k,v){ try { v ? localStorage.setItem(k,v) : localStorage.removeItem(k); } catch {} }
+  };
+
+  // ---- this device ----
+  let did = store.get('did');
+  if (!did) { did = Math.random().toString(36).slice(2, 12); store.set('did', did); }
+  const ua = navigator.userAgent;
+  const devName = /iPhone/.test(ua) ? 'iPhone' : /iPad/.test(ua) ? 'iPad' : /Android/.test(ua) ? 'Android'
+    : /Mac/.test(ua) ? 'Mac' : /Windows/.test(ua) ? 'Windows PC' : /Linux/.test(ua) ? 'Linux PC' : 'Device';
+
+  let code = store.get('code');
+  let ver = '';
+  let known = null;
+  let polling = false;
+
+  const headers = () => code ? { 'x-room-code': code } : {};
+  const codeQ = () => code ? '&code=' + encodeURIComponent(code) : '';
+
+  // ---- helpers ----
+  const esc = s => String(s).replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+  const linkify = s => esc(s).replace(/(https?:\/\/[^\s<]+)/g, '<a href="$1" target="_blank" rel="noopener noreferrer">$1</a>');
+  const fmtSize = n => n < 1024 ? n + ' B' : n < 1048576 ? (n/1024).toFixed(0) + ' KB' : (n/1048576).toFixed(1) + ' MB';
+  function ago(ts){
+    const s = Math.max(0, (Date.now() - ts) / 1000 | 0);
+    if (s < 10) return 'just now';
+    if (s < 60) return s + 's ago';
+    if (s < 3600) return (s/60|0) + ' min ago';
+    return (s/3600|0) + ' h ago';
+  }
+  let toastT;
+  function toast(msg){
+    const t = $('#toast'); t.textContent = msg; t.classList.add('show');
+    clearTimeout(toastT); toastT = setTimeout(() => t.classList.remove('show'), 2200);
+  }
+  async function api(path, opts = {}){
+    const r = await fetch(path, { cache: 'no-store', ...opts, headers: { ...headers(), ...(opts.headers || {}) } });
+    let j = {}; try { j = await r.json(); } catch {}
+    if (!r.ok) throw new Error(j.error || ('Error ' + r.status));
+    return j;
+  }
+  async function copy(text){
+    try { await navigator.clipboard.writeText(text); }
+    catch {
+      const ta = document.createElement('textarea'); ta.value = text; document.body.appendChild(ta);
+      ta.select(); document.execCommand('copy'); ta.remove();
+    }
+    toast('Copied ✔');
+  }
+
+  // ---- status ----
+  function setStatus(ok, j){
+    $('#dot').className = 'dot ' + (ok ? 'on' : 'off');
+    if (!ok) { $('#roomLabel').textContent = 'Offline – retrying'; return; }
+    $('#roomLabel').textContent = j.isCode ? '🔒 Code ' + j.room : 'WiFi room #' + j.room;
+    const b = $('#banner');
+    if (j.storage === 'memory') {
+      b.innerHTML = '⚠️ <b>Storage not connected.</b> Sharing between devices will not work reliably. In Vercel, open your project → <b>Storage</b> → connect <b>Upstash for Redis</b>, then redeploy. (See README.)';
+      b.style.display = 'block';
+    } else b.style.display = 'none';
+  }
+
+  // ---- render ----
+  function render(items){
+    const box = $('#items');
+    if (known) {
+      const fresh = items.filter(i => !known.has(i.id) && i.did !== did);
+      if (fresh.length) toast('📥 ' + fresh.length + ' new item' + (fresh.length > 1 ? 's' : '') + ' received');
+    }
+    known = new Set(items.map(i => i.id));
+    if (!items.length) {
+      box.innerHTML = '<div class="card empty"><div class="big">📭</div><p>Nothing shared yet.<br>Open this website on your other device (same WiFi) and send something!</p></div>';
+      return;
+    }
+    box.innerHTML = items.map(i => {
+      const who = i.did === did ? '<span class="me">You</span>' : esc(i.from);
+      const fileUrl = '/api/file?id=' + i.id + codeQ();
+      let body = '', acts = '';
+      if (i.type === 'text') {
+        body = '<div class="txt">' + linkify(i.text) + '</div>';
+        acts = '<button class="btn small" data-copy="' + i.id + '">📋 Copy</button>';
+      } else if (i.type === 'image') {
+        body = '<img class="img" loading="lazy" src="' + fileUrl + '" alt="' + esc(i.name) + '">';
+        acts = '<a class="btn small" href="' + fileUrl + '&dl=1" download="' + esc(i.name) + '">⬇ Download</a>';
+      } else {
+        body = '<div class="file"><div class="ficon">📄</div><div><div class="fname">' + esc(i.name) + '</div><div class="hint">' + fmtSize(i.size) + '</div></div></div>';
+        acts = '<a class="btn small" href="' + fileUrl + '&dl=1" download="' + esc(i.name) + '">⬇ Download</a>';
+      }
+      const extra = i.type !== 'text' ? ' · ' + fmtSize(i.size) : '';
+      return '<div class="card item"><div class="meta"><span>' + who + '</span><span>' + ago(i.ts) + extra + '</span></div>'
+        + body + '<div class="acts">' + acts + '<button class="btn small ghost" data-del="' + i.id + '">Delete</button></div></div>';
+    }).join('');
+    box._items = items;
+  }
+
+  // ---- polling ----
+  async function poll(force){
+    if (polling) return;
+    polling = true;
+    try {
+      const j = await api('/api/items?since=' + (force ? '' : ver) + codeQ());
+      setStatus(true, j);
+      if (j.changed) { ver = j.ver; render(j.items); }
+    } catch (e) { setStatus(false); }
+    finally { polling = false; }
+  }
+  setInterval(() => { if (!document.hidden) poll(); }, 2000);
+  setInterval(() => { const b = $('#items'); if (b._items && !document.hidden) render(b._items); }, 30000);
+  document.addEventListener('visibilitychange', () => { if (!document.hidden) poll(); });
+
+  // ---- send text ----
+  async function sendText(){
+    const ta = $('#text'); const text = ta.value;
+    if (!text.trim()) { ta.focus(); return; }
+    const btn = $('#sendText'); btn.disabled = true;
+    try {
+      await api('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ type: 'text', text, from: devName, did }) });
+      ta.value = ''; toast('Sent ✔'); poll(true);
+    } catch (e) { toast('❌ ' + e.message); }
+    finally { btn.disabled = false; }
+  }
+  $('#sendText').onclick = sendText;
+  $('#text').addEventListener('keydown', e => { if (e.key === 'Enter' && (e.ctrlKey || e.metaKey)) sendText(); });
+
+  // ---- files ----
+  const readAsDataURL = blob => new Promise((ok, no) => { const r = new FileReader(); r.onload = () => ok(r.result); r.onerror = no; r.readAsDataURL(blob); });
+  async function shrinkImage(file){
+    if (!/^image\/(jpeg|png|webp)$/.test(file.type)) return file;
+    const url = URL.createObjectURL(file);
+    try {
+      const img = await new Promise((ok, no) => { const i = new Image(); i.onload = () => ok(i); i.onerror = no; i.src = url; });
+      const maxSide = 2048;
+      if (file.size <= 1.2 * 1024 * 1024 && Math.max(img.width, img.height) <= maxSide) return file;
+      let scale = Math.min(1, maxSide / Math.max(img.width, img.height));
+      for (let q = 0.85; q >= 0.4; q -= 0.15) {
+        const c = document.createElement('canvas');
+        c.width = Math.round(img.width * scale); c.height = Math.round(img.height * scale);
+        const ctx = c.getContext('2d'); ctx.fillStyle = '#fff'; ctx.fillRect(0, 0, c.width, c.height);
+        ctx.drawImage(img, 0, 0, c.width, c.height);
+        const blob = await new Promise(ok => c.toBlob(ok, 'image/jpeg', q));
+        if (blob && blob.size <= MAX_BYTES * 0.9) {
+          return new File([blob], file.name.replace(/\.\w+$/, '') + '.jpg', { type: 'image/jpeg' });
+        }
+        scale *= 0.8;
+      }
+      return file;
+    } catch { return file; }
+    finally { URL.revokeObjectURL(url); }
+  }
+  async function sendFiles(list){
+    const files = [...list]; if (!files.length) return;
+    const bar = $('#progress'), fill = bar.querySelector('i');
+    bar.style.display = 'block'; fill.style.width = '5%';
+    let sent = 0;
+    for (let n = 0; n < files.length; n++) {
+      try {
+        const f = await shrinkImage(files[n]);
+        if (f.size > MAX_BYTES) { toast('❌ ' + f.name + ' is larger than 3 MB'); continue; }
+        const data = await readAsDataURL(f);
+        await api('/api/send', { method: 'POST', headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ type: 'file', name: f.name || 'image.png', mime: f.type || 'application/octet-stream', data, from: devName, did }) });
+        sent++;
+      } catch (e) { toast('❌ ' + e.message); }
+      fill.style.width = Math.round((n + 1) / files.length * 100) + '%';
+    }
+    setTimeout(() => { bar.style.display = 'none'; fill.style.width = '0'; }, 600);
+    if (sent) { toast('Sent ' + sent + ' file' + (sent > 1 ? 's' : '') + ' ✔'); poll(true); }
+  }
+  $('#fileInput').onchange = e => { sendFiles(e.target.files); e.target.value = ''; };
+  const drop = $('#drop');
+  ['dragenter', 'dragover'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.add('over'); }));
+  ['dragleave', 'drop'].forEach(ev => drop.addEventListener(ev, e => { e.preventDefault(); drop.classList.remove('over'); }));
+  drop.addEventListener('drop', e => sendFiles(e.dataTransfer.files));
+  document.addEventListener('paste', e => {
+    const files = [...(e.clipboardData ? e.clipboardData.files : [])];
+    if (files.length) { e.preventDefault(); switchTab('files'); sendFiles(files); }
+  });
+
+  // ---- tabs ----
+  function switchTab(t){
+    document.querySelectorAll('.tab').forEach(b => b.classList.toggle('active', b.dataset.tab === t));
+    $('#tab-text').classList.toggle('hidden', t !== 'text');
+    $('#tab-files').classList.toggle('hidden', t !== 'files');
+  }
+  document.querySelectorAll('.tab').forEach(b => b.onclick = () => switchTab(b.dataset.tab));
+
+  // ---- item actions ----
+  $('#items').addEventListener('click', async e => {
+    const t = e.target;
+    const items = $('#items')._items || [];
+    if (t.dataset.copy) { const it = items.find(i => i.id === t.dataset.copy); if (it) copy(it.text); }
+    if (t.dataset.del) {
+      try { await api('/api/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ id: t.dataset.del }) }); poll(true); }
+      catch (err) { toast('❌ ' + err.message); }
+    }
+    if (t.classList.contains('img')) { const v = $('#viewer'); v.querySelector('img').src = t.src; v.style.display = 'flex'; }
+  });
+  $('#viewer').onclick = () => { $('#viewer').style.display = 'none'; };
+  $('#clearAll').onclick = async () => {
+    if (!($('#items')._items || []).length) return;
+    try { await api('/api/clear', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: '{}' }); toast('Cleared'); poll(true); }
+    catch (e) { toast('❌ ' + e.message); }
+  };
+
+  // ---- private code ----
+  $('#roomPill').onclick = () => { const p = $('#panel'); p.style.display = p.style.display === 'block' ? 'none' : 'block'; $('#codeInput').value = code; };
+  function setCode(c){
+    code = c.toUpperCase().replace(/[^A-Z0-9]/g, '').slice(0, 20);
+    store.set('code', code); ver = ''; known = null; poll(true);
+  }
+  $('#codeJoin').onclick = () => {
+    const v = $('#codeInput').value.trim();
+    if (v.replace(/[^A-Za-z0-9]/g, '').length < 4) { toast('Code must be at least 4 letters/numbers'); return; }
+    setCode(v); toast('Joined code ' + code); $('#panel').style.display = 'none';
+  };
+  $('#codeNew').onclick = () => { $('#codeInput').value = String(Math.floor(100000 + Math.random() * 900000)); };
+  $('#codeLeave').onclick = () => { setCode(''); $('#codeInput').value = ''; toast('Using your WiFi network'); $('#panel').style.display = 'none'; };
+
+  poll(true);
+})();
+</script>
+</body>
+</html>
