@@ -1,6 +1,6 @@
 // POST /api/send  { type:'text', text }  or  { type:'file', name, mime, data(base64) }
 const crypto = require('crypto');
-const { TTL, MAX_ITEMS, MAX_FILE_BYTES, MAX_TEXT, redis, getRoom, keys, send, body } = require('./_lib');
+const { isBlobUrl, TTL, MAX_ITEMS, MAX_FILE_BYTES, MAX_TEXT, redis, getRoom, keys, send, body } = require('./_lib');
 
 module.exports = async (req, res) => {
   if (req.method !== 'POST') return send(res, 405, { error: 'POST only' });
@@ -31,6 +31,13 @@ module.exports = async (req, res) => {
       const mime = /^[\w.+-]+\/[\w.+-]+$/.test(b.mime || '') ? b.mime : 'application/octet-stream';
       Object.assign(meta, { type: mime.startsWith('image/') ? 'image' : 'file', name, mime, size });
       cmds.push(['SET', k.file(id), JSON.stringify({ name, mime, data }), 'EX', TTL]);
+    } else if (b.type === 'blob') {
+      // Big file already uploaded to Vercel Blob by the browser — just save its link.
+      if (!isBlobUrl(b.url)) return send(res, 400, { error: 'Invalid file link' });
+      const name = String(b.name || 'file').replace(/[\\/\r\n"]/g, '_').slice(0, 120);
+      const mime = /^[\w.+-]+\/[\w.+-]+$/.test(b.mime || '') ? b.mime : 'application/octet-stream';
+      const size = Math.max(0, Number(b.size) || 0);
+      Object.assign(meta, { type: mime.startsWith('image/') ? 'image' : 'file', name, mime, size, url: String(b.url) });
     } else {
       return send(res, 400, { error: 'Unknown type' });
     }
