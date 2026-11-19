@@ -1,7 +1,10 @@
 {
   "name": "trollforshare",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "private": true,
-  "description": "Share text & images instantly between devices on the same WiFi",
-  "engines": { "node": ">=18" }
+  "description": "Share text, images & big files instantly between devices on the same WiFi",
+  "engines": { "node": ">=18" },
+  "dependencies": {
+    "@vercel/blob": "^2.9.0"
+  }
 }
