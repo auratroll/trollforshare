@@ -294,7 +294,8 @@
   async function bigUpload(f, onPct){
     if (!blobMod) blobMod = await import('/blob-client.js');
     const safe = (f.name || 'file').replace(/[^\w.\-]+/g, '_').slice(-80) || 'file';
-    const r = await blobMod.upload('tfs/' + safe, f, {
+    const folder = Array.from(crypto.getRandomValues(new Uint8Array(8)), b => b.toString(16).padStart(2, '0')).join('');
+    const r = await blobMod.uploadPresigned('tfs/' + folder + '/' + safe, f, {
       access: 'public',
       handleUploadUrl: '/api/upload',
       multipart: f.size > 50 * 1024 * 1024,
