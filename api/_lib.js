@@ -17,6 +17,11 @@ const REDIS_URL = findEnv(['KV_REST_API_URL', 'UPSTASH_REDIS_REST_URL', 'REST_AP
 const REDIS_TOKEN = findEnv(['KV_REST_API_TOKEN', 'UPSTASH_REDIS_REST_TOKEN', 'REST_API_TOKEN']);
 const STORAGE = REDIS_URL && REDIS_TOKEN ? 'redis' : 'memory';
 
+// Vercel Blob (for big files). Also works if Vercel added a prefix to the name.
+const BLOB_TOKEN = findEnv(['BLOB_READ_WRITE_TOKEN']);
+const MAX_BIG_FILE = 200 * 1024 * 1024; // 200 MB per file via Vercel Blob
+const isBlobUrl = u => { try { const x = new URL(u); return x.protocol === 'https:' && x.hostname.endsWith('.blob.vercel-storage.com'); } catch { return false; } };
+
 // ---------- tiny in-memory fallback (for local testing only) ----------
 const mem = globalThis.__dropMem || (globalThis.__dropMem = new Map());
 function memGet(k) {
@@ -104,4 +109,4 @@ function body(req) {
   try { return JSON.parse(req.body || '{}'); } catch { return {}; }
 }
 
-module.exports = { TTL, MAX_ITEMS, MAX_FILE_BYTES, MAX_TEXT, STORAGE, redis, getRoom, keys, send, body };
+module.exports = { BLOB_TOKEN, MAX_BIG_FILE, isBlobUrl, TTL, MAX_ITEMS, MAX_FILE_BYTES, MAX_TEXT, STORAGE, redis, getRoom, keys, send, body };
