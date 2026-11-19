@@ -19,6 +19,9 @@ const STORAGE = REDIS_URL && REDIS_TOKEN ? 'redis' : 'memory';
 
 // Vercel Blob (for big files). Also works if Vercel added a prefix to the name.
 const BLOB_TOKEN = findEnv(['BLOB_READ_WRITE_TOKEN']);
+const BLOB_STORE_ID = findEnv(['BLOB_STORE_ID']);      // newer Vercel setup (OIDC, no token)
+const BLOB_ENABLED = !!(BLOB_TOKEN || BLOB_STORE_ID);
+const blobAuth = () => BLOB_TOKEN ? { token: BLOB_TOKEN } : { storeId: BLOB_STORE_ID };
 const MAX_BIG_FILE = 200 * 1024 * 1024; // 200 MB per file via Vercel Blob
 const isBlobUrl = u => { try { const x = new URL(u); return x.protocol === 'https:' && x.hostname.endsWith('.blob.vercel-storage.com'); } catch { return false; } };
 
@@ -109,4 +112,4 @@ function body(req) {
   try { return JSON.parse(req.body || '{}'); } catch { return {}; }
 }
 
-module.exports = { BLOB_TOKEN, MAX_BIG_FILE, isBlobUrl, TTL, MAX_ITEMS, MAX_FILE_BYTES, MAX_TEXT, STORAGE, redis, getRoom, keys, send, body };
+module.exports = { BLOB_ENABLED, blobAuth, BLOB_TOKEN, MAX_BIG_FILE, isBlobUrl, TTL, MAX_ITEMS, MAX_FILE_BYTES, MAX_TEXT, STORAGE, redis, getRoom, keys, send, body };
