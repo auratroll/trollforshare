@@ -1,13 +1,13 @@
 // POST /api/clear  { id? }  → delete one item, or everything in this room
-const { BLOB_TOKEN, isBlobUrl, MAX_ITEMS, TTL, redis, getRoom, keys, send, body } = require('./_lib');
+const { BLOB_ENABLED, blobAuth, isBlobUrl, MAX_ITEMS, TTL, redis, getRoom, keys, send, body } = require('./_lib');
 
 async function deleteBlobs(urls) {
   urls = urls.filter(isBlobUrl);
-  if (!urls.length || !BLOB_TOKEN) return;
+  if (!urls.length || !BLOB_ENABLED) return;
   try {
     const { del } = await import('@vercel/blob');
     // Never let a slow delete block the page; files also auto-delete after 1 day.
-    await Promise.race([del(urls, { token: BLOB_TOKEN }), new Promise(r => setTimeout(r, 5000))]);
+    await Promise.race([del(urls, blobAuth()), new Promise(r => setTimeout(r, 5000))]);
   } catch {}
 }
 
