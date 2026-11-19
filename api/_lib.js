@@ -7,8 +7,14 @@ const MAX_ITEMS = 50;              // newest 50 items kept per room
 const MAX_FILE_BYTES = 3 * 1024 * 1024; // 3 MB per file (Vercel body limit is 4.5 MB)
 const MAX_TEXT = 20000;
 
-const REDIS_URL = process.env.KV_REST_API_URL || process.env.UPSTASH_REDIS_REST_URL || '';
-const REDIS_TOKEN = process.env.KV_REST_API_TOKEN || process.env.UPSTASH_REDIS_REST_TOKEN || '';
+// Finds the Upstash keys whatever prefix Vercel gave them (KV_, STORAGE_, etc.)
+function findEnv(suffixes) {
+  for (const s of suffixes) if (process.env[s]) return process.env[s];
+  const name = Object.keys(process.env).find(k => suffixes.some(s => k.endsWith('_' + s)) && !k.includes('READ_ONLY'));
+  return name ? process.env[name] : '';
+}
+const REDIS_URL = findEnv(['KV_REST_API_URL', 'UPSTASH_REDIS_REST_URL', 'REST_API_URL']);
+const REDIS_TOKEN = findEnv(['KV_REST_API_TOKEN', 'UPSTASH_REDIS_REST_TOKEN', 'REST_API_TOKEN']);
 const STORAGE = REDIS_URL && REDIS_TOKEN ? 'redis' : 'memory';
 
 // ---------- tiny in-memory fallback (for local testing only) ----------
